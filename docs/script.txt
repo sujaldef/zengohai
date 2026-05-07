@@ -1,0 +1,75 @@
+# Audio Customer Support Agent - Technical Demonstration Script
+
+## INTRODUCTION
+(0:00 - 0:45)
+
+"Hi everyone. Today I’m walking you through the implementation of an Audio-First Customer Support Agent. 
+
+The goal here was to build a production-oriented system that handles the entire pipeline—from hearing a customer’s voice to speaking back a contextually accurate answer. 
+
+Technically, we’re looking at a modular Python stack: FastAPI for the backend, Streamlit for the interface, and a robust AI pipeline using Whisper for speech recognition, ChromaDB for vector retrieval, and Large Language Models via Groq and OpenAI. 
+
+What makes this project interesting isn't just the AI, but how we orchestrated these disparate services into a low-latency, stateful conversational experience."
+
+---
+
+## ARCHITECTURE
+(0:45 - 1:15)
+
+"The system follows a strict linear orchestration: Audio Input, Speech-to-Text, LLM with RAG, and finally, Text-to-Speech output. 
+
+I chose a modular architecture where each stage of the pipeline is a decoupled service. This is an intentional engineering decision—it allows us to swap a local Whisper model for an API, or switch from OpenAI to Groq for the LLM, without touching the core business logic. 
+
+The glue holding this together is an asynchronous pipeline class in Python, which ensures that we’re not blocking the server while waiting for heavy audio processing or external API calls."
+
+---
+
+## RAG & MEMORY
+(1:15 - 2:00)
+
+"A key requirement for any support agent is reliability. To prevent the LLM from hallucinating, I implemented a Retrieval-Augmented Generation—or RAG—workflow. 
+
+We’re using ChromaDB as our vector database. At startup, we embed sixteen specific company policy documents using a Sentence-Transformer model. When a query comes in, we perform a semantic search to find the most relevant context. 
+
+But support is rarely a single question. That’s why I integrated a mid-session conversational memory. Using a sliding window buffer, the agent maintains the last few turns of the conversation. This allows it to understand pronouns and follow-up requests, like 'What about international orders?', where the context of 'orders' is pulled from the previous turn."
+
+---
+
+## STT & TTS IMPLEMENTATION
+(2:00 - 2:45)
+
+"For the speech-to-text layer, I’m using OpenAI’s Whisper. It’s exceptionally robust against background noise and accents, which is critical for support. The implementation accepts various audio formats like WAV and MP3, converting them into clean text for the LLM.
+
+On the output side, I chose Edge-TTS for the synthesis. Unlike many traditional TTS engines that sound robotic or have high latency, Edge-TTS provides high-quality, neural voices with almost zero cold-start time. This ensures the response feels natural and conversational, rather than a delayed playback of a synthesized script."
+
+---
+
+## LIVE DEMO
+(2:45 - 4:30)
+
+"Let’s jump into the live environment. 
+
+First, I’ll hit the `/health` endpoint of our FastAPI server. You can see all components—STT, LLM, and TTS—are reporting as 'healthy'. This real-time monitoring is vital for production stability.
+
+Now, over to the Streamlit UI. I’ll start with a text query: 'What is your return policy?' 
+[Pause for response]
+Notice how it specifically mentions the 30-day window. That’s the RAG system pulling from our 'Return Policy Overview' document in ChromaDB.
+
+Now, let's test the memory with a follow-up: 'How do I start that process?'
+[Pause for response]
+Perfect. It didn’t ask me what process I meant; it knew we were talking about returns and gave me the step-by-step instructions.
+
+Finally, the core feature: Audio. I'll upload a short clip asking about shipping times.
+[Play audio / Show processing]
+The system transcribes the audio, fetches the shipping documents, and—as you can hear—speaks the answer back to us."
+
+---
+
+## CLOSING
+(4:30 - 5:00)
+
+"To wrap up, this project demonstrates how we can bridge the gap between raw audio and intelligent, grounded dialogue. 
+
+By focusing on a modular pipeline, RAG for accuracy, and mid-session memory for continuity, we’ve built a foundation that’s ready to scale. Whether it's adding more knowledge documents or moving to a faster inference engine, the architecture is ready. 
+
+Thanks for watching this technical walkthrough of the Audio Customer Support Agent."
