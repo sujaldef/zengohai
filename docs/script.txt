@@ -44,32 +44,43 @@ On the output side, I chose Edge-TTS for the synthesis. Unlike many traditional 
 
 ---
 
+## TRANSCRIPT ENHANCEMENT
+(2:45 - 3:20)
+
+"Midway through development, I implemented a critical enhancement for transparency and debuggability: Full Transcript Support.
+
+I modified the backend to move away from raw audio streaming to a structured JSON response. Now, for every interaction, the system returns a base64-encoded audio payload accompanied by a full transcript of both the user's input and the agent's response. 
+
+This architectural shift allowed me to build an 'Enhanced Audio Chat' interface that displays real-time transcriptions and processing metrics, ensuring the user is never in the dark about what the AI is thinking or how long it’s taking to process."
+
+---
+
 ## LIVE DEMO
-(2:45 - 4:30)
+(3:20 - 4:40)
 
 "Let’s jump into the live environment. 
 
 First, I’ll hit the `/health` endpoint of our FastAPI server. You can see all components—STT, LLM, and TTS—are reporting as 'healthy'. This real-time monitoring is vital for production stability.
 
-Now, over to the Streamlit UI. I’ll start with a text query: 'What is your return policy?' 
-[Pause for response]
-Notice how it specifically mentions the 30-day window. That’s the RAG system pulling from our 'Return Policy Overview' document in ChromaDB.
+Now, over to the Streamlit UI. Notice the new 'Enhanced Audio Chat' tab. I’ll record a live query: 'What is your return policy?' 
+[Record and Process]
 
-Now, let's test the memory with a follow-up: 'How do I start that process?'
-[Pause for response]
-Perfect. It didn’t ask me what process I meant; it knew we were talking about returns and gave me the step-by-step instructions.
+Look at the right-hand panel. The system has instantly populated the Transcript. You can see the 'User Input' matches my voice perfectly, and the 'Agent Response' specifies the 30-day window from our RAG documents.
 
-Finally, the core feature: Audio. I'll upload a short clip asking about shipping times.
-[Play audio / Show processing]
-The system transcribes the audio, fetches the shipping documents, and—as you can hear—speaks the answer back to us."
+[Point to metrics]
+At the bottom, we see the total processing time—roughly 2 seconds for the entire round-trip. This level of transparency is exactly what we need for a production-ready support tool.
+
+[Play Response]
+And as you can hear, the synthesized audio matches the transcript perfectly, providing a seamless multi-modal experience."
 
 ---
 
 ## CLOSING
-(4:30 - 5:00)
+(4:40 - 5:15)
 
 "To wrap up, this project demonstrates how we can bridge the gap between raw audio and intelligent, grounded dialogue. 
 
-By focusing on a modular pipeline, RAG for accuracy, and mid-session memory for continuity, we’ve built a foundation that’s ready to scale. Whether it's adding more knowledge documents or moving to a faster inference engine, the architecture is ready. 
+By focusing on a modular pipeline, RAG for accuracy, and now enhanced transcript transparency, we’ve built a foundation that’s ready to scale. Whether it's adding more knowledge documents or moving to a faster inference engine, the architecture is ready. 
 
 Thanks for watching this technical walkthrough of the Audio Customer Support Agent."
+

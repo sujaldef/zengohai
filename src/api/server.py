@@ -73,6 +73,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _clean_env(name: str) -> Optional[str]:
+    """Return a stripped env value or None when unset/empty."""
+    value = os.getenv(name)
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
+def _detect_llm_provider(model: str, explicit_provider: Optional[str], groq_key: Optional[str]) -> str:
+    """Choose LLM provider from explicit override, keys, or model family."""
+    if explicit_provider:
+        provider = explicit_provider.strip().lower()
+        if provider in {"groq", "openai"}:
+            return provider
+
+    model_name = (model or "").lower()
+    if groq_key or any(token in model_name for token in ("llama", "mixtral", "gemma")):
+        return "groq"
+    return "openai"
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the pipeline on server startup."""
@@ -81,23 +103,33 @@ async def startup_event():
     try:
         logger.info("Starting Audio Support Agent API server...")
 
-        llm_api_key = os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY")
+        groq_api_key = _clean_env("GROQ_API_KEY")
+        openai_api_key = _clean_env("OPENAI_API_KEY")
+        llm_api_key = groq_api_key or openai_api_key or _clean_env("LLM_API_KEY")
+        llm_model = _clean_env("LLM_MODEL") or "gpt-4o-mini"
+        explicit_provider = _clean_env("LLM_PROVIDER")
+        llm_provider = _detect_llm_provider(llm_model, explicit_provider, groq_api_key)
+
         if not llm_api_key:
             logger.warning("Neither GROQ_API_KEY nor OPENAI_API_KEY is set. The server will start, but requests will fail until one is configured.")
+        elif llm_provider == "groq" and not groq_api_key:
+            logger.warning("LLM provider resolved to Groq but GROQ_API_KEY is empty. Set GROQ_API_KEY to process requests.")
+        elif llm_provider == "openai" and not openai_api_key:
+            logger.warning("LLM provider resolved to OpenAI but OPENAI_API_KEY is empty. Set OPENAI_API_KEY to process requests.")
 
         stt_config = {
-            "api_key": os.getenv("OPENAI_API_KEY"),
+            "api_key": openai_api_key,
             "model": os.getenv("STT_MODEL", "base"),
             "timeout": 60,
         }
         
         llm_config = {
             "api_key": llm_api_key,
-            "model": os.getenv("LLM_MODEL", "gpt-4o-mini"),
+            "model": llm_model,
             "temperature": float(os.getenv("LLM_TEMPERATURE", "0.2")),
             "memory_window": int(os.getenv("MEMORY_WINDOW", "6")),
-            "provider": "groq" if os.getenv("GROQ_API_KEY") else "openai",
-            "groq_api_key": os.getenv("GROQ_API_KEY"),
+            "provider": llm_provider,
+            "groq_api_key": groq_api_key,
         }
         
         tts_config = {
